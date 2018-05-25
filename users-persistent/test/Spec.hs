@@ -15,5 +15,7 @@ main :: IO ()
 main =
     withSystemTempFile "tempBaseXXX.db" $ \fp hdl ->
     do hClose hdl
-       pool <- runNoLoggingT $ createSqlitePool (T.pack fp) 5
+       let infoNoFK = set fkEnabled False $ mkSqliteConnectionInfo ""
+           wrapper = wrapConnectionInfo infoNoFK sqliteConn
+       pool <- runNoLoggingT $ (createSqlPool wrapper 1) (T.pack fp) 5
        hspec $ makeUsersSpec (Persistent $ flip runSqlPool pool)
